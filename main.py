@@ -1,5 +1,8 @@
+import tkinter as tk
+import tkinter.messagebox as msg
 import random
 import string
+import pyperclip
 
 
 def generate_password(pass_length, letters=True, numbers=True, special_chars=True):
@@ -22,9 +25,6 @@ def generate_password(pass_length, letters=True, numbers=True, special_chars=Tru
             characters += char_set
             required_chars.append(char_set)
 
-    if not characters:
-        return "Error: No character types selected."
-
     password = []
 
     # Add at least one character from each selected type
@@ -40,45 +40,103 @@ def generate_password(pass_length, letters=True, numbers=True, special_chars=Tru
     return "".join(password)
 
 
-while True:
+def display_password():
     try:
-        user_input = input(
-            "\nEnter the length of the password (or type 'exit' to quit): "
-        )
-        exit_commands = {"exit", "quit", "q", "e"}
-        if isinstance(user_input, str) and user_input.strip().lower() in exit_commands:
-            print("Exiting the password generator. Goodbye!")
-            break
-
-        try:
-            pass_length = int(user_input)
-        except ValueError:
-            raise ValueError("Password length must be a valid number.")
-
+        pass_length = int(entry_length.get())
         if pass_length <= 0:
-            raise ValueError("Password length must be greater than 0.")
+            msg.showerror("Error", "Password length must be greater than 0.")
+            return
 
-        has_letters = (
-            input("Should the password contain letters? (y/n): ").lower() == "y"
-        )
-        has_numbers = (
-            input("Should the password contain numbers? (y/n): ").lower() == "y"
-        )
-        has_special = (
-            input("Should the password contain special characters? (y/n): ").lower()
-            == "y"
-        )
+        has_letters = letters_var.get()
+        has_numbers = numbers_var.get()
+        has_special = special_var.get()
+
+        # Check if at least one character type is selected
+        if not (has_letters or has_numbers or has_special):
+            msg.showerror("Error", "No character types selected.")
+            return
 
         password = generate_password(pass_length, has_letters, has_numbers, has_special)
-        print(f"\nGenerated password with {len(password)} characters:\n" + password)
 
-    except ValueError as e:
-        print(f"Error: {e}")
+        if password is None:
+            return
+
+        # Display the generated password
+        label_password.config(text=f"Generated Password:\n{password}")
+        label_password.pack()
+
+        # Display the clear and copy button
+        button_copy.pack()
+        button_clear.pack()
+
+    except ValueError:
+        msg.showerror("Error", "Password length must be a valid number.")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        msg.showerror("Error", f"An unexpected error occurred: {e}")
 
-    # Option to exit
-    exit_choice = input("\nDo you want to generate another password? (y/n): ").lower()
-    if exit_choice != "y":
-        print("Exiting the password generator. Goodbye!")
-        break
+
+def clear_button():
+    # Clear the password length input field
+    entry_length.delete(0, tk.END)
+
+    # Reset the checkboxes to their default values (all checked)
+    letters_var.set(True)
+    numbers_var.set(True)
+    special_var.set(True)
+
+    label_password.config(text="")
+
+    entry_length.focus()
+
+    # Hide the Clear and Copy buttons after it's used
+    button_copy.pack_forget()
+    button_clear.pack_forget()
+
+
+def copy_password():
+    # Get the current generated password from the label
+    password = label_password.cget("text").replace("Generated password: ", "")
+
+    if password:  # Ensure there is a valid password to copy
+        pyperclip.copy(password)  # Copy password to clipboard
+        msg.showinfo("Success", "Password copied to clipboard!")
+
+
+# Create the main window
+window = tk.Tk()
+window.title("Password Generator")
+
+# Function to generate a password based on user input
+label_length = tk.Label(window, text="Enter the length of the password:")
+label_length.pack()
+
+entry_length = tk.Entry(window)
+entry_length.pack()
+
+# Checkboxes to select character types
+letters_var = tk.BooleanVar(value=True)
+letters_check = tk.Checkbutton(window, text="Letters", variable=letters_var)
+letters_check.pack()
+
+numbers_var = tk.BooleanVar(value=True)
+numbers_check = tk.Checkbutton(window, text="Numbers", variable=numbers_var)
+numbers_check.pack()
+
+special_var = tk.BooleanVar(value=True)
+special_check = tk.Checkbutton(window, text="Special Characters", variable=special_var)
+special_check.pack()
+
+# generate button
+button_generate = tk.Button(window, text="Generate Password", command=display_password)
+button_generate.pack()
+
+# copy button
+button_copy = tk.Button(window, text="Copy Password", command=copy_password)
+
+# celar button
+button_clear = tk.Button(window, text="Clear", command=clear_button)
+
+# label to display the generated password
+label_password = tk.Label(window, text="")
+
+window.mainloop()
