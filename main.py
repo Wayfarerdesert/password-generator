@@ -4,6 +4,10 @@ import random
 import string
 import pyperclip
 
+# Global variable to store the current password
+current_password = ""
+hidden_password = False
+
 
 def generate_password(pass_length, letters=True, numbers=True, special_chars=True):
     char_sets = {
@@ -41,6 +45,8 @@ def generate_password(pass_length, letters=True, numbers=True, special_chars=Tru
 
 
 def display_password():
+    global current_password, hidden_password
+
     try:
         pass_length = int(entry_length.get())
         if pass_length <= 0:
@@ -56,16 +62,21 @@ def display_password():
             msg.showerror("Error", "No character types selected.")
             return
 
-        password = generate_password(pass_length, has_letters, has_numbers, has_special)
+        current_password = generate_password(
+            pass_length, has_letters, has_numbers, has_special
+        )
 
-        if password is None:
+        if not current_password:
             return
 
         # Display the generated password
-        label_password.config(text=f"Generated Password:\n{password}")
+        label_password.config(text=f"Generated Password:\n{current_password}")
         label_password.pack()
 
-        # Display the clear and copy button
+        # Display the buttons
+        button_hide.config(text="Hide")
+        button_hide.pack()
+
         button_copy.pack()
         button_clear.pack()
 
@@ -75,7 +86,23 @@ def display_password():
         msg.showerror("Error", f"An unexpected error occurred: {e}")
 
 
-def clear_button():
+def password_visibility():
+    global hidden_password, current_password
+
+    if hidden_password:
+        label_password.config(text=f"Generated Password:\n{current_password}")
+        button_hide.config(text="Hide")
+        hidden_password = False
+    else:
+        label_password.config(
+            text=f"Generated Password:\n{'*' * len(current_password)}"
+        )
+        button_hide.config(text="Show")
+        hidden_password = True
+
+
+def clear_fields():
+    global current_password, hidden_password
     # Clear the password length input field
     entry_length.delete(0, tk.END)
 
@@ -85,10 +112,13 @@ def clear_button():
     special_var.set(True)
 
     label_password.config(text="")
-
     entry_length.focus()
 
+    current_password = ""  # Clear the stored password
+    hidden_password = False
+
     # Hide the Clear and Copy buttons after it's used
+    button_hide.pack_forget()
     button_copy.pack_forget()
     button_clear.pack_forget()
 
@@ -102,6 +132,7 @@ def copy_password():
         msg.showinfo("Success", "Password copied to clipboard!")
 
 
+# Tkinter GUI Setup
 # Create the main window
 window = tk.Tk()
 window.title("Password Generator")
@@ -130,11 +161,14 @@ special_check.pack()
 button_generate = tk.Button(window, text="Generate Password", command=display_password)
 button_generate.pack()
 
+# hide password
+button_hide = tk.Button(window, text="Hide", command=password_visibility)
+
 # copy button
 button_copy = tk.Button(window, text="Copy Password", command=copy_password)
 
 # celar button
-button_clear = tk.Button(window, text="Clear", command=clear_button)
+button_clear = tk.Button(window, text="Clear", command=clear_fields)
 
 # label to display the generated password
 label_password = tk.Label(window, text="")
