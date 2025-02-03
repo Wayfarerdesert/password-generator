@@ -70,7 +70,9 @@ def display_password():
             return
 
         # Display the generated password
-        label_password.config(text=f"Generated Password:\n{current_password}")
+        label_password.config(
+            text=f"Generated Password:{password_strength(current_password)}\n{current_password}"
+        )
         label_password.pack()
 
         # Display the buttons
@@ -86,16 +88,62 @@ def display_password():
         msg.showerror("Error", f"An unexpected error occurred: {e}")
 
 
+def password_strength(password):
+    # Define the character sets
+    char_sets = {
+        "letters": string.ascii_letters,
+        "numbers": string.digits,
+        "special characters": string.punctuation,
+    }
+
+    strength = 0
+    feedback = []
+
+    # Check for each character set
+    for key, char_set in char_sets.items():
+        if any(char in char_set for char in password):
+            strength += 1
+        else:
+            feedback.append(f"\nAdd {key.lower()} for a stronger password.")
+
+    # Length-based scoring (max +3 points)
+    length = len(password)
+    if length >= 16:
+        strength += 3
+    elif length >= 12:
+        strength += 2
+    elif length >= 8:
+        strength += 1
+    else:
+        feedback.append("\nUse at least 8 characters for better security.")
+
+    # Strength Level Assessment
+    if strength <= 3:
+        level = "(Weak)"
+    elif 4 <= strength <= 5:
+        level = "(Moderate)"
+    else:
+        level = "(Strong)"
+
+    # Optional Feedback
+    if feedback and level != "(Strong)":
+        return level + " " + " ".join(feedback)
+
+    return level
+
+
 def password_visibility():
     global hidden_password, current_password
 
     if hidden_password:
-        label_password.config(text=f"Generated Password:\n{current_password}")
+        label_password.config(
+            text=f"Generated Password: {password_strength(current_password)}\n{current_password}"
+        )
         button_hide.config(text="Hide")
         hidden_password = False
     else:
         label_password.config(
-            text=f"Generated Password:\n{'*' * len(current_password)}"
+            text=f"Generated Password: {password_strength(current_password)}\n{'*' * len(current_password)}"
         )
         button_hide.config(text="Show")
         hidden_password = True
@@ -161,7 +209,7 @@ special_check.pack()
 button_generate = tk.Button(window, text="Generate Password", command=display_password)
 button_generate.pack()
 
-# hide password
+# password visibility button
 button_hide = tk.Button(window, text="Hide", command=password_visibility)
 
 # copy button
