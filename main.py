@@ -49,7 +49,18 @@ def display_password():
     global current_password, hidden_password
 
     try:
-        pass_length = int(entry_length.get())
+        user_input = entry_length.get().strip()
+
+        # Validate input
+        if not user_input:
+            msg.showerror("Error", "Please enter a password length.")
+            return
+        if not user_input.isdigit():
+            msg.showerror("Error", "Password length must be a valid number.")
+            return
+
+        pass_length = int(user_input)
+
         if pass_length <= 0:
             msg.showerror("Error", "Password length must be greater than 0.")
             return
@@ -70,14 +81,25 @@ def display_password():
         if not current_password:
             return
 
-        # Display the generated password
-        password_wrapper.config(
-            text=f"Generated Password: {password_strength(current_password)}\n"
-        )
-        password_wrapper.pack()
+        # Get password strength and assign colors
+        strength, color, feedback = password_strength(current_password)
 
+        # Update label contents
+        label_strength.config(text=f"{strength}\n", foreground=color)
+        label_feedback.config(text=feedback, foreground="black")
         label_password.config(text=current_password)
-        label_password.pack()
+
+        # Display elements in a single line
+        password_frame.pack()
+        password_wrapper.pack()
+        label_strength.pack()
+
+        if feedback:
+            label_feedback.pack()
+        else:
+            label_feedback.pack_forget()
+
+        label_password.pack(padx=5)
 
         # Display the buttons
         control_panel.pack(pady=5)
@@ -125,29 +147,31 @@ def password_strength(password):
     # Strength Level Assessment
     if strength <= 3:
         level = "Weak"
+        color = "red"
     elif 4 <= strength <= 5:
         level = "Moderate"
+        color = "orange"
     else:
         level = "Strong"
+        color = "green"
 
-    # Optional Feedback
-    if feedback and level != "(Strong)":
-        return level + " " + " ".join(feedback)
+    # Ensure feedback is properly formatted
+    feedback_text = "".join(feedback) if feedback else ""
 
-    return level
+    return level, color, feedback_text
 
 
 def password_visibility():
     global hidden_password, current_password
-    txt = f"Generated Password: {password_strength(current_password)}\n"
+    strength, color, feedback = password_strength(current_password)
 
     if hidden_password:
-        password_wrapper.config(text=txt)
+        label_strength.config(text=f"{strength}\n")
+        label_feedback.config(text=feedback)
         label_password.config(text=current_password)
         button_hide.config(text="Hide")
         hidden_password = False
     else:
-        password_wrapper.config(text=txt)
         label_password.config(text="*" * len(current_password))
         button_hide.config(text="Show")
         hidden_password = True
@@ -163,17 +187,14 @@ def clear_fields():
     numbers_var.set(True)
     special_var.set(True)
 
-    label_password.config(text="")
-    entry_length.focus()
-
     current_password = ""  # Clear the stored password
     hidden_password = False
 
-    # Hide the Clear and Copy buttons after it's used
+    # Clear the password display
+    password_frame.pack_forget()
     control_panel.pack_forget()
-    button_hide.pack_forget()
-    button_copy.pack_forget()
-    button_clear.pack_forget()
+
+    entry_length.focus()
 
 
 def copy_password():
@@ -244,13 +265,16 @@ special_check.pack(side="left", pady=2, padx=5)
 button_generate = ttk.Button(window, text="Generate Password", command=display_password)
 button_generate.pack(pady=10)
 
+# password frame
+password_frame = ttk.Frame(window)
+
 # label to display the generated password
 password_wrapper = ttk.Label(
-    window, text="", font=("Arial", 12), anchor="center", justify="center"
+    password_frame, text="Generated Password: ", font=("Arial", 12)
 )
-label_password = ttk.Label(
-    window, text="", font=("Arial", 12, "bold"), anchor="center", justify="center"
-)
+label_strength = ttk.Label(password_frame, text="", font=("Arial", 12))
+label_feedback = ttk.Label(password_frame, text="", font=("Arial", 10))
+label_password = ttk.Label(password_frame, text="", font=("Arial", 12, "bold"))
 
 # Frame for buttons
 control_panel = ttk.Frame(window)
