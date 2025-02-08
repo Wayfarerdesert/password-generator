@@ -3,7 +3,7 @@ import tkinter.messagebox as msg
 from tkinter import ttk
 import random
 import string
-import pyperclip
+# import pyperclip
 
 # Global variable to store the current password
 current_password = ""
@@ -63,6 +63,8 @@ def display_password():
 
         if pass_length <= 0:
             msg.showerror("Error", "Password length must be greater than 0.")
+        elif pass_length > 128:
+            msg.showerror("Error", "Password length must not exceed 128 characters.")
             return
 
         has_letters = letters_var.get()
@@ -85,29 +87,14 @@ def display_password():
         strength, color, feedback = password_strength(current_password)
 
         # Update label contents
-        label_strength.config(text=f"{strength}\n", foreground=color)
+        label_strength.config(text=f"Password Quality: {strength}", foreground=color)
         label_feedback.config(text=feedback, foreground="black")
         label_password.config(text=current_password)
 
-        # Display elements in a single line
-        password_frame.pack()
-        password_wrapper.pack()
-        label_strength.pack()
-
         if feedback:
-            label_feedback.pack()
+            label_feedback.pack(pady=5)
         else:
             label_feedback.pack_forget()
-
-        label_password.pack(padx=5)
-
-        # Display the buttons
-        control_panel.pack(pady=5)
-        button_hide.config(text="Hide")
-        button_hide.pack(side="left", padx=5)
-
-        button_copy.pack(side="left", padx=5)
-        button_clear.pack(side="left", padx=5)
 
     except ValueError:
         msg.showerror("Error", "Password length must be a valid number.")
@@ -146,11 +133,14 @@ def password_strength(password):
 
     # Strength Level Assessment
     if strength <= 3:
-        level = "Weak"
+        level = "Poor"
         color = "red"
-    elif 4 <= strength <= 5:
-        level = "Moderate"
+    elif strength <= 4:
+        level = "Weak"
         color = "orange"
+    elif strength <= 5:
+        level = "Moderate"
+        color = "lightgreen"
     else:
         level = "Strong"
         color = "green"
@@ -166,9 +156,13 @@ def password_visibility():
     strength, color, feedback = password_strength(current_password)
 
     if hidden_password:
-        label_strength.config(text=f"{strength}\n")
-        label_feedback.config(text=feedback)
+        if not current_password:
+            label_strength.config(text="Password Quality:")
+        else:
+            label_strength.config(text=f"Password Quality: {strength}")
+
         label_password.config(text=current_password)
+        label_feedback.config(text=feedback)
         button_hide.config(text="Hide")
         hidden_password = False
     else:
@@ -191,19 +185,21 @@ def clear_fields():
     hidden_password = False
 
     # Clear the password display
-    password_frame.pack_forget()
-    control_panel.pack_forget()
+    label_password.config(text="")
+    label_strength.config(text="Password Quality:", foreground="black")
+    label_feedback.pack_forget()
 
     entry_length.focus()
 
 
 def copy_password():
     # Get the current generated password from the label
-    password = label_password.cget("text").replace("Generated password: ", "")
+    # password = label_password.cget("text").replace("Generated password: ", "")
 
-    if password:  # Ensure there is a valid password to copy
-        pyperclip.copy(password)  # Copy password to clipboard
-        msg.showinfo("Success", "Password copied to clipboard!")
+    # if password:  # Ensure there is a valid password to copy
+    #     pyperclip.copy(password)  # Copy password to clipboard
+    #     msg.showinfo("Success", "Password copied to clipboard!")
+    pass
 
 
 # Tkinter GUI Setup
@@ -227,71 +223,102 @@ style.configure(
     borderwidth=0,
 )
 style.map("TButton", background=[("active", "#45a049")])  # Hover effect
-style.configure(
-    "TCheckbutton",
-    background="#f0f4f8",
-    font=("Arial", 10),
-    borderwidth=0,
-)
-
-# Label for password length
-label_length = ttk.Label(window, text="Enter the length of the password:")
-label_length.pack(pady=2)
-
-# Label for password length
-entry_length = ttk.Entry(window)
-entry_length.pack(pady=15)
-
-# Frame for Checkboxes
-checkbox_frame = ttk.Frame(window)
-checkbox_frame.pack(pady=5)
-
-# Checkboxes to select character types
-letters_var = tk.BooleanVar(value=True)
-letters_check = ttk.Checkbutton(checkbox_frame, text="Letters", variable=letters_var)
-letters_check.pack(side="left", pady=2, padx=5)
-
-numbers_var = tk.BooleanVar(value=True)
-numbers_check = ttk.Checkbutton(checkbox_frame, text="Numbers", variable=numbers_var)
-numbers_check.pack(side="left", pady=2, padx=5)
-
-special_var = tk.BooleanVar(value=True)
-special_check = ttk.Checkbutton(
-    checkbox_frame, text="Special Characters", variable=special_var
-)
-special_check.pack(side="left", pady=2, padx=5)
-
-# generate button
-button_generate = ttk.Button(window, text="Generate Password", command=display_password)
-button_generate.pack(pady=10)
+style.configure("TCheckbutton", background="#f0f4f8", font=("Arial", 10), borderwidth=0)
 
 # password frame
 password_frame = ttk.Frame(window)
+password_frame.pack(anchor="w", pady=10, padx=10)
 
-# label to display the generated password
-password_wrapper = ttk.Label(
-    password_frame, text="Generated Password: ", font=("Arial", 12)
+# Frame to hold password label and buttons
+pass_display_frame = ttk.Frame(password_frame)
+pass_display_frame.pack(padx=5)
+
+label_password = ttk.Label(
+    pass_display_frame, text="", font=("Arial", 12, "bold"), width=40
 )
-label_strength = ttk.Label(password_frame, text="", font=("Arial", 12))
-label_feedback = ttk.Label(password_frame, text="", font=("Arial", 10))
-label_password = ttk.Label(password_frame, text="", font=("Arial", 12, "bold"))
+label_password.pack(side="left", pady=5)
 
 # Frame for buttons
-control_panel = ttk.Frame(window)
+control_panel = ttk.Frame(pass_display_frame)
+control_panel.pack(side="left", pady=5)
 
 # password visibility button
 button_hide = tk.Button(
     control_panel, text="Hide", command=password_visibility, borderwidth=0
 )
+button_hide.pack(side="left", padx=5)
 
 # copy button
 button_copy = tk.Button(
     control_panel, text="Copy Password", command=copy_password, borderwidth=0
 )
+button_copy.pack(side="left", padx=5)
+
+label_strength = ttk.Label(password_frame, text="", font=("Arial", 12))
+label_strength.configure(text="Password Quality:")
+label_strength.pack(side="left", padx=5)
+
+# Frame for Checkboxes
+checkbox_frame = ttk.Frame(window, width=300)
+checkbox_frame.configure(borderwidth=3, relief="groove")
+checkbox_frame.pack(anchor="w", pady=10, padx=10)
+
+# Frame for length input (First Line)
+length_frame = ttk.Frame(checkbox_frame)
+length_frame.pack(fill="x", padx=5, pady=2)
+
+# Label and Entry for password length
+label_length = ttk.Label(length_frame, text="Length:")
+label_length.pack(side="left", padx=10)
+
+entry_length = ttk.Entry(length_frame, width=5)
+entry_length.pack(side="left", padx=5)
+
+# Frame for checkboxes (Second Line)
+checkbox_container = ttk.Frame(checkbox_frame)
+checkbox_container.pack(fill="x", padx=5, pady=2)
+
+characters_label = ttk.Label(checkbox_container, text="Character Types")
+characters_label.pack(anchor="w", pady=10, padx=5)
+
+# Define BooleanVars
+letters_var = tk.BooleanVar(value=True)
+numbers_var = tk.BooleanVar(value=True)
+special_var = tk.BooleanVar(value=True)
+
+# Checkboxes to select character types
+letters_check = ttk.Checkbutton(
+    checkbox_container, text="Letters", variable=letters_var
+)
+letters_check.pack(side="left", padx=5)
+
+numbers_check = ttk.Checkbutton(
+    checkbox_container, text="Numbers", variable=numbers_var
+)
+numbers_check.pack(side="left", padx=5)
+
+special_check = ttk.Checkbutton(
+    checkbox_container, text="Special Characters", variable=special_var
+)
+special_check.pack(side="left", padx=5)
+
+# show password feedback label
+label_feedback = ttk.Label(checkbox_frame, text="", font=("Arial", 10))
+
+# Frame for the password handler buttons
+pass_action_buttons = ttk.Frame(window)
+pass_action_buttons.pack(pady=5, padx=10, anchor="e")
 
 # celar button
 button_clear = tk.Button(
-    control_panel, text="Clear", command=clear_fields, borderwidth=0
+    pass_action_buttons, text="Clear", command=clear_fields, borderwidth=0
 )
+button_clear.pack(side="left", padx=10)
+
+# generate button
+button_generate = ttk.Button(
+    pass_action_buttons, text="Generate Password", command=display_password
+)
+button_generate.pack(side="left", pady=10)
 
 window.mainloop()
