@@ -56,9 +56,6 @@ def display_password():
         user_input = entry_length.get().strip()
 
         # Validate input
-        if not user_input:
-            msg.showerror("Error", "Please enter a password length.")
-            return
         if not user_input.isdigit():
             msg.showerror("Error", "Password length must be a valid number.")
             return
@@ -89,16 +86,19 @@ def display_password():
         if not current_password:
             return
 
+        # Update the password input field
+        label_password.delete(0, tk.END)
+        label_password.insert(0, current_password)
+
         # Get password strength and assign colors
         strength, color, feedback = password_strength(current_password)
 
         # Update label contents
         label_strength.config(text=f"Password Quality: {strength}", foreground=color)
         label_feedback.config(text=feedback, foreground="black")
-        label_password.config(text=current_password)
 
         if feedback:
-            label_feedback.pack(pady=5, padx=10)
+            label_feedback.pack(side="left", pady=5, padx=10)
         else:
             label_feedback.pack_forget()
 
@@ -106,6 +106,30 @@ def display_password():
         msg.showerror("Error", "Password length must be a valid number.")
     except Exception as e:
         msg.showerror("Error", f"An unexpected error occurred: {e}")
+
+
+def on_password_change(event=None):
+    global current_password
+    user_input_password = label_password.get()
+
+    if user_input_password:
+        current_password = user_input_password
+
+        strength, color, feedback = password_strength(current_password)
+
+        # Update strength label
+        label_strength.config(text=f"Password Quality: {strength}", foreground=color)
+
+        # Update feedback label
+        label_feedback.config(text=feedback, foreground="black")
+        if feedback:
+            label_feedback.pack(side="left", pady=5, padx=5)
+        else:
+            label_feedback.pack_forget()
+    else:
+        # Clear strength indicators if input is empty
+        label_strength.config(text="Password Quality:", foreground="black")
+        label_feedback.pack_forget()
 
 
 def password_strength(password):
@@ -167,12 +191,14 @@ def password_visibility():
         else:
             label_strength.config(text=f"Password Quality: {strength}")
 
-        label_password.config(text=current_password)
+        label_password.delete(0, tk.END)
+        label_password.insert(0, current_password)
         label_feedback.config(text=feedback)
         button_hide.config(text="Hide")
         hidden_password = False
     else:
-        label_password.config(text="*" * len(current_password))
+        label_password.delete(0, tk.END)
+        label_password.insert(0, "*" * len(current_password))
         button_hide.config(text="Show")
         hidden_password = True
 
@@ -193,11 +219,11 @@ def clear_fields():
     hidden_password = False
 
     # Clear the password display
-    label_password.config(text="")
+    label_password.delete(0, tk.END)
     label_strength.config(text="Password Quality:", foreground="black")
     label_feedback.pack_forget()
 
-    entry_length.focus()
+    label_password.focus()
 
 
 def copy_password():
@@ -241,10 +267,10 @@ password_frame.pack(anchor="w", pady=10, padx=10)
 pass_display_frame = ttk.Frame(password_frame)
 pass_display_frame.pack(padx=5)
 
-label_password = ttk.Label(
-    pass_display_frame, text="", font=("Arial", 12, "bold"), width=40
-)
+label_password = ttk.Entry(pass_display_frame, font=("Arial", 12, "bold"), width=40)
 label_password.pack(side="left", pady=5)
+# Bind the <KeyRelease> event to trigger display_password when the user types
+label_password.bind("<KeyRelease>", on_password_change)
 
 # Frame for buttons
 control_panel = ttk.Frame(pass_display_frame)
