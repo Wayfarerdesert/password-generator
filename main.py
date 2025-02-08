@@ -10,11 +10,14 @@ current_password = ""
 hidden_password = False
 
 
-def generate_password(pass_length, letters=True, numbers=True, special_chars=True):
+def generate_password(
+    pass_length, uppercase=True, lowercase=True, numbers=True, special_chars=True
+):
     char_sets = {
-        "letters": string.ascii_letters,
+        "uppercase_letters": string.ascii_uppercase,
+        "lowercase_letters": string.ascii_lowercase,
         "numbers": string.digits,
-        "special": string.punctuation,
+        "special_characters": string.punctuation,
     }
 
     characters = ""
@@ -23,9 +26,10 @@ def generate_password(pass_length, letters=True, numbers=True, special_chars=Tru
     # Add selected character sets to the password pool and required list
     for key, char_set in char_sets.items():
         if (
-            (key == "letters" and letters)
+            (key == "uppercase_letters" and uppercase)
+            or (key == "lowercase_letters" and lowercase)
             or (key == "numbers" and numbers)
-            or (key == "special" and special_chars)
+            or (key == "special_characters" and special_chars)
         ):
             characters += char_set
             required_chars.append(char_set)
@@ -67,17 +71,19 @@ def display_password():
             msg.showerror("Error", "Password length must not exceed 128 characters.")
             return
 
-        has_letters = letters_var.get()
+        # has_letters = letters_var.get()
+        has_uppercase = uppercase_var.get()
+        has_lowercase = lowercase_var.get()
         has_numbers = numbers_var.get()
         has_special = special_var.get()
 
         # Check if at least one character type is selected
-        if not (has_letters or has_numbers or has_special):
+        if not (has_uppercase or has_lowercase or has_numbers or has_special):
             msg.showerror("Error", "No character types selected.")
             return
 
         current_password = generate_password(
-            pass_length, has_letters, has_numbers, has_special
+            pass_length, has_uppercase, has_lowercase, has_numbers, has_special
         )
 
         if not current_password:
@@ -92,7 +98,7 @@ def display_password():
         label_password.config(text=current_password)
 
         if feedback:
-            label_feedback.pack(pady=5)
+            label_feedback.pack(pady=5, padx=10)
         else:
             label_feedback.pack_forget()
 
@@ -140,7 +146,7 @@ def password_strength(password):
         color = "orange"
     elif strength <= 5:
         level = "Moderate"
-        color = "lightgreen"
+        color = "#23A928"
     else:
         level = "Strong"
         color = "green"
@@ -178,6 +184,8 @@ def clear_fields():
 
     # Reset the checkboxes to their default values (all checked)
     letters_var.set(True)
+    uppercase_var.set(True)
+    lowercase_var.set(True)
     numbers_var.set(True)
     special_var.set(True)
 
@@ -269,7 +277,7 @@ length_frame.pack(fill="x", padx=5, pady=2)
 
 # Label and Entry for password length
 label_length = ttk.Label(length_frame, text="Length:")
-label_length.pack(side="left", padx=10)
+label_length.pack(side="left", padx=5)
 
 entry_length = ttk.Entry(length_frame, width=5)
 entry_length.pack(side="left", padx=5)
@@ -283,22 +291,29 @@ characters_label.pack(anchor="w", pady=10, padx=5)
 
 # Define BooleanVars
 letters_var = tk.BooleanVar(value=True)
+uppercase_var = tk.BooleanVar(value=True)
+lowercase_var = tk.BooleanVar(value=True)
 numbers_var = tk.BooleanVar(value=True)
 special_var = tk.BooleanVar(value=True)
 
 # Checkboxes to select character types
-letters_check = ttk.Checkbutton(
-    checkbox_container, text="Letters", variable=letters_var
+uppercase_check = ttk.Checkbutton(
+    checkbox_container, text="A-Z", variable=uppercase_var, width=10
 )
-letters_check.pack(side="left", padx=5)
+uppercase_check.pack(side="left", padx=5)
+
+lowercase_check = ttk.Checkbutton(
+    checkbox_container, text="a-z", variable=lowercase_var, width=10
+)
+lowercase_check.pack(side="left", padx=5)
 
 numbers_check = ttk.Checkbutton(
-    checkbox_container, text="Numbers", variable=numbers_var
+    checkbox_container, text="0-9", variable=numbers_var, width=10
 )
 numbers_check.pack(side="left", padx=5)
 
 special_check = ttk.Checkbutton(
-    checkbox_container, text="Special Characters", variable=special_var
+    checkbox_container, text="/*+&...", variable=special_var, width=10
 )
 special_check.pack(side="left", padx=5)
 
