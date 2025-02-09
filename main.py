@@ -94,7 +94,8 @@ def display_password():
         strength, color, feedback = password_strength(current_password)
 
         # Update label contents
-        label_strength.config(text=f"Password Quality: {strength}", foreground=color)
+        label_strength.config(text=strength, foreground=color)
+        label_strength.pack(side="left")
         label_feedback.config(text=feedback, foreground="black")
 
         if feedback:
@@ -118,7 +119,7 @@ def on_password_change(event=None):
         strength, color, feedback = password_strength(current_password)
 
         # Update strength label
-        label_strength.config(text=f"Password Quality: {strength}", foreground=color)
+        label_strength.config(text=strength, foreground=color)
 
         # Update feedback label
         label_feedback.config(text=feedback, foreground="black")
@@ -126,10 +127,6 @@ def on_password_change(event=None):
             label_feedback.pack(side="left", pady=5, padx=5)
         else:
             label_feedback.pack_forget()
-    else:
-        # Clear strength indicators if input is empty
-        label_strength.config(text="Password Quality:", foreground="black")
-        label_feedback.pack_forget()
 
 
 def password_strength(password):
@@ -187,9 +184,9 @@ def password_visibility():
 
     if hidden_password:
         if not current_password:
-            label_strength.config(text="Password Quality:")
+            label_strength.config(text="")
         else:
-            label_strength.config(text=f"Password Quality: {strength}")
+            label_strength.config(text=strength)
 
         label_password.delete(0, tk.END)
         label_password.insert(0, current_password)
@@ -207,6 +204,7 @@ def clear_fields():
     global current_password, hidden_password
     # Clear the password length input field
     entry_length.delete(0, tk.END)
+    entry_length.insert(0, 12)
 
     # Reset the checkboxes to their default values (all checked)
     letters_var.set(True)
@@ -220,7 +218,7 @@ def clear_fields():
 
     # Clear the password display
     label_password.delete(0, tk.END)
-    label_strength.config(text="Password Quality:", foreground="black")
+    label_strength.pack_forget()
     label_feedback.pack_forget()
 
     label_password.focus()
@@ -247,7 +245,8 @@ style = ttk.Style()
 style.theme_use("clam")
 
 # Custom Styles
-style.configure("TLabel", background="#f0f4f8", font=("Arial", 11))
+style.configure("TLabel", font=("Arial", 11))
+
 style.configure(
     "TButton",
     background="#4CAF50",
@@ -257,7 +256,27 @@ style.configure(
     borderwidth=0,
 )
 style.map("TButton", background=[("active", "#45a049")])  # Hover effect
-style.configure("TCheckbutton", background="#f0f4f8", font=("Arial", 10), borderwidth=0)
+
+style.configure(
+    "TSpinbox", arrowsize=15, arrowcolor="grey", background="#ffffff", borderwidth=0
+)
+style.map(
+    "TSpinbox",
+    background=[("readonly", "#e0e0e0"), ("active", "#d0d0d0")],
+    arrowcolor=[("pressed", "#4CAF50"), ("active", "#45a049")],
+)
+
+style.configure(
+    "TCheckbutton",
+    indicatormargin=0,
+    indicatorsize=0,
+    borderwidth=0,
+    background="#f0f4f8",
+    font=("Arial", 10),
+    anchor="center",
+)
+style.map("TCheckbutton", background=[("active", "#45a049"), ("selected", "#4CAF50")])
+# Custom Styles ends here
 
 # password frame
 password_frame = ttk.Frame(window)
@@ -288,9 +307,12 @@ button_copy = tk.Button(
 )
 button_copy.pack(side="left", padx=5)
 
-label_strength = ttk.Label(password_frame, text="", font=("Arial", 12))
-label_strength.configure(text="Password Quality:")
-label_strength.pack(side="left", padx=5)
+label_pass_quality = ttk.Label(
+    password_frame, text="Password Quality:", font=("Arial", 10)
+)
+label_pass_quality.pack(side="left", padx=5, pady=3)
+
+label_strength = ttk.Label(password_frame, text="", font=("Arial", 10))
 
 # Frame for Checkboxes
 checkbox_frame = ttk.Frame(window, width=300)
@@ -305,7 +327,11 @@ length_frame.pack(fill="x", padx=5, pady=2)
 label_length = ttk.Label(length_frame, text="Length:")
 label_length.pack(side="left", padx=5)
 
-entry_length = ttk.Entry(length_frame, width=5)
+length_var = tk.IntVar(value=12)
+
+entry_length = ttk.Spinbox(
+    length_frame, from_=1, to=128, textvariable=length_var, width=5
+)
 entry_length.pack(side="left", padx=5)
 
 # Frame for checkboxes (Second Line)
