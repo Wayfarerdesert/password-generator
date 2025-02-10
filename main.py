@@ -1,11 +1,8 @@
 import tkinter as tk
 import tkinter.messagebox as msg
 from tkinter import ttk
-from tkinter import PhotoImage
 import random
 import string
-
-# import pyperclip
 from PIL import Image, ImageTk
 
 # Global variables
@@ -232,13 +229,14 @@ def clear_fields():
 
 
 def copy_password():
-    # Get the current generated password from the label
-    # password = label_password.cget("text").replace("Generated password: ", "")
+    # Get the current password from the entry widget
+    password = label_password.get()
 
-    # if password:  # Ensure there is a valid password to copy
-    #     pyperclip.copy(password)  # Copy password to clipboard
-    #     msg.showinfo("Success", "Password copied to clipboard!")
-    pass
+    if password:
+        window.clipboard_clear()
+        window.clipboard_append(password)
+        window.update()
+        msg.showinfo("Success", "Password copied to clipboard!")
 
 
 def img_setup():
