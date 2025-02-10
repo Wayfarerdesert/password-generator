@@ -1,13 +1,17 @@
 import tkinter as tk
 import tkinter.messagebox as msg
 from tkinter import ttk
+from tkinter import PhotoImage
 import random
 import string
-# import pyperclip
 
-# Global variable to store the current password
+# import pyperclip
+from PIL import Image, ImageTk
+
+# Global variables
 current_password = ""
 hidden_password = False
+img_files = []
 
 
 def generate_password(
@@ -145,7 +149,7 @@ def password_strength(password):
         if any(char in char_set for char in password):
             strength += 1
         else:
-            feedback.append(f"\nAdd {key.lower()} for a stronger password.")
+            feedback.append(f"Add {key.lower()} for a stronger password.")
 
     # Length-based scoring (max +3 points)
     length = len(password)
@@ -156,7 +160,7 @@ def password_strength(password):
     elif length >= 8:
         strength += 1
     else:
-        feedback.append("\nUse at least 8 characters for better security.")
+        feedback.append("Use at least 8 characters for better security.")
 
     # Strength Level Assessment
     if strength <= 3:
@@ -173,7 +177,7 @@ def password_strength(password):
         color = "green"
 
     # Ensure feedback is properly formatted
-    feedback_text = "".join(feedback) if feedback else ""
+    feedback_text = "\n".join(feedback) if feedback else ""
 
     return level, color, feedback_text
 
@@ -191,12 +195,12 @@ def password_visibility():
         label_password.delete(0, tk.END)
         label_password.insert(0, current_password)
         label_feedback.config(text=feedback)
-        button_hide.config(text="Hide")
+        button_hide.config(image=img_files[0])
         hidden_password = False
     else:
         label_password.delete(0, tk.END)
         label_password.insert(0, "*" * len(current_password))
-        button_hide.config(text="Show")
+        button_hide.config(image=img_files[1])
         hidden_password = True
 
 
@@ -234,11 +238,34 @@ def copy_password():
     pass
 
 
+def img_setup():
+    global img_files
+    img_files.clear()
+    img_path = [
+        "./assets/hide.png",
+        "./assets/eye.png",
+        "./assets/cp.png",
+        "./assets/rld.png",
+    ]
+
+    # Resize all images in the list
+    for i in img_path:
+        image = Image.open(i)
+        resized_img = image.resize((15, 15))
+        photo_image = ImageTk.PhotoImage(resized_img)
+        img_files.append(photo_image)
+
+
 # Tkinter GUI Setup
 # Create the main window
 window = tk.Tk()
 window.title("Password Generator")
 window.configure(bg="#f0f0f0")
+window.geometry("800x600")
+window.minsize(600, 380)
+
+# Initialize the images when the program starts
+img_setup()
 
 # Style Configuration
 style = ttk.Style()
@@ -248,14 +275,20 @@ style.theme_use("clam")
 style.configure("TLabel", font=("Arial", 11))
 
 style.configure(
-    "TButton",
+    "Generate.TButton",
     background="#4CAF50",
     foreground="white",
     font=("Arial", 10),
     padding=6,
     borderwidth=0,
 )
-style.map("TButton", background=[("active", "#45a049")])  # Hover effect
+style.map("Generate.TButton", background=[("active", "#45a049")])  # Hover effect
+
+style.configure(
+    "TButton",
+    background="#DCDAD4",
+    borderwidth=0,
+)
 
 style.configure(
     "TSpinbox", arrowsize=15, arrowcolor="grey", background="#ffffff", borderwidth=0
@@ -271,7 +304,7 @@ style.configure(
     indicatormargin=0,
     indicatorsize=0,
     borderwidth=0,
-    background="#f0f4f8",
+    background="#bbb9b1",
     font=("Arial", 10),
     anchor="center",
 )
@@ -280,30 +313,39 @@ style.map("TCheckbutton", background=[("active", "#45a049"), ("selected", "#4CAF
 
 # password frame
 password_frame = ttk.Frame(window)
-password_frame.pack(anchor="w", pady=10, padx=10)
+password_frame.pack(anchor="w", pady=10, padx=10, fill="x", expand=True)
 
 # Frame to hold password label and buttons
 pass_display_frame = ttk.Frame(password_frame)
-pass_display_frame.pack(padx=5)
+pass_display_frame.pack(fill="x", expand=True, padx=5)
+pass_display_frame.columnconfigure(0, weight=1)  # Allow column 0 (Entry) to expand
 
-label_password = ttk.Entry(pass_display_frame, font=("Arial", 12, "bold"), width=40)
-label_password.pack(side="left", pady=5)
+label_password = ttk.Entry(pass_display_frame, font=("Arial", 12, "bold"))
+label_password.grid(row=0, column=0, sticky="ew", padx=(0, 5))
 # Bind the <KeyRelease> event to trigger display_password when the user types
 label_password.bind("<KeyRelease>", on_password_change)
 
 # Frame for buttons
 control_panel = ttk.Frame(pass_display_frame)
-control_panel.pack(side="left", pady=5)
+control_panel.grid(row=0, column=1, sticky="e")
 
 # password visibility button
 button_hide = tk.Button(
-    control_panel, text="Hide", command=password_visibility, borderwidth=0
+    control_panel, image=img_files[0], command=password_visibility, borderwidth=0
 )
 button_hide.pack(side="left", padx=5)
 
+# generate button
+button_generate = ttk.Button(
+    control_panel,
+    image=img_files[3],
+    command=display_password,
+)
+button_generate.pack(side="left", pady=5)
+
 # copy button
 button_copy = tk.Button(
-    control_panel, text="Copy Password", command=copy_password, borderwidth=0
+    control_panel, image=img_files[2], command=copy_password, borderwidth=0
 )
 button_copy.pack(side="left", padx=5)
 
@@ -315,9 +357,10 @@ label_pass_quality.pack(side="left", padx=5, pady=3)
 label_strength = ttk.Label(password_frame, text="", font=("Arial", 10))
 
 # Frame for Checkboxes
-checkbox_frame = ttk.Frame(window, width=300)
+checkbox_frame = ttk.Frame(window, height=180)
 checkbox_frame.configure(borderwidth=3, relief="groove")
-checkbox_frame.pack(anchor="w", pady=10, padx=10)
+checkbox_frame.pack_propagate(False)
+checkbox_frame.pack(anchor="w", pady=10, padx=10, fill="x")
 
 # Frame for length input (First Line)
 length_frame = ttk.Frame(checkbox_frame)
@@ -384,7 +427,10 @@ button_clear.pack(side="left", padx=10)
 
 # generate button
 button_generate = ttk.Button(
-    pass_action_buttons, text="Generate Password", command=display_password
+    pass_action_buttons,
+    text="Generate Password",
+    command=display_password,
+    style="Generate.TButton",
 )
 button_generate.pack(side="left", pady=10)
 
