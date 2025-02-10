@@ -124,6 +124,7 @@ def on_password_change(event=None):
 
         # Update strength label
         label_strength.config(text=strength, foreground=color)
+        label_strength.pack(side="left")
 
         # Update feedback label
         label_feedback.config(text=feedback, foreground="black")
@@ -131,6 +132,8 @@ def on_password_change(event=None):
             label_feedback.pack(side="left", pady=5, padx=5)
         else:
             label_feedback.pack_forget()
+    else:
+        clear_fields()
 
 
 def password_strength(password):
