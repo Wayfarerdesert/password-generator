@@ -65,11 +65,11 @@ def display_password():
 
         if pass_length <= 0:
             msg.showerror("Error", "Password length must be greater than 0.")
+            return
         elif pass_length > 128:
             msg.showerror("Error", "Password length must not exceed 128 characters.")
             return
 
-        # has_letters = letters_var.get()
         has_uppercase = uppercase_var.get()
         has_lowercase = lowercase_var.get()
         has_numbers = numbers_var.get()
@@ -104,8 +104,6 @@ def display_password():
         else:
             label_feedback.pack_forget()
 
-    except ValueError:
-        msg.showerror("Error", "Password length must be a valid number.")
     except Exception as e:
         msg.showerror("Error", f"An unexpected error occurred: {e}")
 
